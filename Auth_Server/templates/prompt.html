@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permission Prompt</title>
+    <style>
+        form {
+            margin: 20vh auto;
+            text-align: center;
+        }
+        div {
+            margin: 10px;
+        }
+        button {
+            padding: 5px 15px;
+        }        
+    </style>
+</head>
+<body>
+    <form action = "/prompt" method = "post">
+        <h2>Permission Request</h2>
+        <p>Do you want to authenticate {{ client_name }} app to your data on the server</p>
+        <div>
+            <input type="hidden" value="accept">
+            <button type="button">Deny</button>
+            <button type="submit">Accept</button>
+        </div>
+    </form>
+</body>
+</html>
