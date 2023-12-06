@@ -42,4 +42,4 @@ def callback():
 
     session['accessToken'] = accessToken.content
 
-    return "<p>Autherization Success, Client's Access Token Is: " + accessToken.content + "</p>"
+    return  accessToken.content
