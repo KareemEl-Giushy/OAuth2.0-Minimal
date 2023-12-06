@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, abort, session, url_for
+from flask import Flask, render_template, redirect, request, abort, session, url_for, jsonify
 import secrets
 import sqlite3
 
@@ -86,7 +86,8 @@ def prompt_page():
         if request.form.get('decision') == 'accept':
             conn = get_db_connection()
             auth_code = secrets.token_hex(15)
-            conn.execute('INSERT INTO tokens(auth_code, user_id) VALUES (?, ?)', [auth_code, session['user']['id']])
+            conn.execute('INSERT INTO tokens(auth_code, user_id, client_name) VALUES (?, ?, ?)', [auth_code, session['user']['id'], session['oauth']['client_name']])
+            conn.commit()
             conn.close()
 
             return redirect(session['oauth']['redirect_uri'] +"?auth_code=" + auth_code)
@@ -108,6 +109,46 @@ def prompt_page():
     else:
         return redirect(url_for('home'))
 
-@app.route("/get_token")
+@app.route("/get_token", methods=["POST"])
 def get_token():
-    return "Hello"
+    if request.method == "POST":
+        if "auth_code" not in request.form:
+            abort(403)
+        if "secret_key" not in request.form:
+            abort(403)
+        
+        if request.form.get("secret_key") != app.secret_key:
+            abort(403)
+
+        auth_code = request.form.get('auth_code')
+        print(auth_code)
+        conn = get_db_connection()
+        token = conn.execute("SELECT * FROM tokens WHERE auth_code = ?", [auth_code]).fetchall()
+        if token:
+            if token[0]['token'] == None:
+                new_token = secrets.token_hex(10)
+                conn.execute("UPDATE tokens SET token = ? WHERE auth_code = ?", [new_token, token[0]['auth_code']])
+                conn.commit()
+                conn.close()
+
+                return new_token
+            return token[0]['token']
+        
+    return "Something Went Wrong. In Valid Auth Code."
+
+@app.route("/user_data", methods=["POST"])
+def user_data():
+    if "token" not in request.form:
+        abort(403)
+    token = request.form['token']
+    conn = get_db_connection()
+    user = conn.execute("SELECT users.* FROM users INNER JOIN tokens ON users.id = tokens.user_id WHERE tokens.token = ?", [token]).fetchall()
+    if user:
+        user = user[0]
+        return jsonify(
+            name        = user['name'],
+            phone       = user['phone'],
+            email       = user['email'],
+            created_at  = user['created_at']
+        )
+    return "Error Has Happend."
