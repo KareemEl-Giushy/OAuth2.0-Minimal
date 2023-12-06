@@ -29,6 +29,11 @@
         <div>
             <button type="submit">Login</button>
         </div>
+        {% if error %}
+            <div style="font-size: 20px;color: red;">
+                <strong>{{ error }}</strong>
+            </div>
+        {% endif %}
     </form>
 </body>
 </html>
