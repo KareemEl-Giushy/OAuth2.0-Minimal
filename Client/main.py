@@ -10,7 +10,7 @@ AUTH_SERVER = "http://localhost:5000"
 
 @app.route("/")
 def home():
-  return "<p>Hello, This Is An External Application</p>"
+  return "<p>Hello, This Is A Client Application That wants to connect to a service</p>"
 
 @app.route("/user", methods=["GET"])
 def user():
