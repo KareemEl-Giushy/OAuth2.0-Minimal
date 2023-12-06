@@ -8,16 +8,17 @@
         margin: 10vh auto;
         text-align: center;
       }
-      button {
+      a {
         padding: 20px;
         font-size: 20px;
         cursor: pointer;
+        border: 1px solid blue;
       }
     </style>
 </head>
 <body>
     <form action="/connect" method="post">
-      <button type="submit">Connect to External App</button>
+    <a target="_blank" href="http://localhost:5000/prompt?client_name={{ client_name }}&redirect_uri={{ redirect_uri }}&response_type={{ response_type }}&scope={{ scope }}">Connect to External App</a>
     </form>
 </body>
 </html>

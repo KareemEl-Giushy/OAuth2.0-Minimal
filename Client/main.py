@@ -1,25 +1,45 @@
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, abort, session, url_for
 import requests as re
+from urllib.parse import quote
 
 app = Flask(__name__)
+app.secret_key = 'this is another secret key'
+
+SECRET_KEY = "this is my secret key"
+AUTH_SERVER = "http://localhost:5000"
 
 @app.route("/")
 def home():
   return "<p>Hello, This Is An External Application</p>"
 
-@app.route("/connect", methods=['GET', 'POST'])
+@app.route("/user", methods=["GET"])
+def user():
+  if 'accessToken' not in session:
+    return redirect(url_for("home"))
+
+  userData = re.post(f"{AUTH_SERVER}/user_data", {"token": session['accessToken']})
+
+  return userData.json()
+
+@app.route("/connect", methods=['GET'])
 def connect():
-  if request.method == "POST":
-    client_name = ""
-    redirect_uri = ""
-    response_type = ""
-    scope = ""
-
-    return redirect(f"http://localhost:5000/prompt?client_name=${client_name}&redirect_uri={redirect_uri}&response_type={response_type}&scope={scope}")
-
   if request.method == "GET":
-    return render_template("connect.html")
+    client_name = "External App"
+    redirect_uri = "http://localhost:5050/callback"
+    response_type = ""
+    scope = "profile"
+    return render_template("connect.html", client_name = quote(client_name), redirect_uri = quote(redirect_uri), response_type = quote(response_type), scope = quote(scope))
 
-@app.route("/callback")
+@app.route("/callback", methods=['GET'])
 def callback():
-  return ''
+  if request.method == "GET":
+    if "auth_code" not in request.args:
+      abort(403)
+
+    auth_code = request.args.get('auth_code')
+
+    accessToken = re.post(f"{AUTH_SERVER}/get_token", {"auth_code": auth_code, "secret_key": SECRET_KEY})
+
+    session['accessToken'] = accessToken.content
+
+    return "<p>Autherization Success, Client's Access Token Is: " + accessToken.content + "</p>"
